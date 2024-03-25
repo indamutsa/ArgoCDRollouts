@@ -1,0 +1,44 @@
+# Third Version of argocd-rbac-cm.yaml:
+# ---------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-rbac-cm
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    p, role:workshop, projects, *, *, allow
+    g, workshop, role:workshop
+
+
+# Second Version of argocd-rbac-cm.yaml:
+# ---------------------------------------
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   labels:
+#     app.kubernetes.io/name: argocd-rbac-cm
+#     app.kubernetes.io/part-of: argocd
+#   name: argocd-rbac-cm
+# data:
+#   policy.default: role:readonly
+#   policy.csv: |
+#     g, workshop, role:workshop
+
+
+# Initial version of argocd-rbac-cm.yaml:
+# ---------------------------------------
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   labels:
+#     app.kubernetes.io/name: argocd-rbac-cm
+#     app.kubernetes.io/part-of: argocd
+#   name: argocd-rbac-cm
+# data:
+#   policy.csv: |
+#     g, workshop, role:workshop

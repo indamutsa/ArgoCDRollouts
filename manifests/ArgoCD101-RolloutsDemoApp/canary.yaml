@@ -1,0 +1,97 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: canary-demo
+spec:
+  replicas: 5
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: canary-demo
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+    spec:
+      containers:
+        - name: canary-demo
+          image: argoproj/rollouts-demo:red
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 5m
+  strategy:
+    canary:
+      canaryService: canary-demo-preview
+      steps:
+        - setWeight: 20
+        - pause: {}
+        - setWeight: 40
+        - pause: {duration: 10}
+        - setWeight: 60
+        - pause: {duration: 10}
+        - setWeight: 80
+        - pause: {duration: 10}
+
+---
+
+# Service for canary preview
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo-preview
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8178
+      targetPort: 8080  # Changed from "http" to 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: canary-demo
+
+---
+
+# Service for canary rollout
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8178
+      targetPort: 8080  # Changed from "http" to 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: canary-demo
+
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-demo
+  annotations:
+    ingress.kubernetes.io/proxy-body-size: 100M
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/app-root: /
+spec:
+  rules:
+    - host: arsene.com # Must be resolved to Minikube's IP
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: canary-demo
+                port:
+                  number: 8178
